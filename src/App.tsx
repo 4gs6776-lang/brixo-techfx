@@ -1,4 +1,4 @@
-importa React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Menu, X, ArrowUpRight, Star, Facebook, Instagram, 
   MessageCircle, Linkedin, Twitter, Mail, Phone, 
