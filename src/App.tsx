@@ -1,43 +1,82 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Menu, X, ArrowRight, Check, Star, Facebook, Instagram, 
-  MessageCircle, Linkedin, Twitter, Mail, Phone, MapPin, 
+  Menu, X, ArrowUpRight, Check, Star, Facebook, Instagram, 
+  MessageCircle, Linkedin, Twitter, Mail, Phone, 
   Palette, Image, Globe, HeartPulse, Code, IdCard, 
-  ShieldCheck, Zap, Sparkles, TrendingUp, Layers
+  ShieldCheck, Zap, Sparkles, TrendingUp, Layers, ArrowRight
 } from 'lucide-react';
+
+// --- HOOKS & UTILITIES ---
+const useInView = (ref: React.RefObject<HTMLElement>) => {
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setInView(true);
+        if (ref.current) observer.unobserve(ref.current);
+      }
+    }, { threshold: 0.15 });
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [ref]);
+  return inView;
+};
 
 // --- CUSTOM CURSOR ---
 const CustomCursor = () => {
-  const cursorRef = useRef<HTMLDivElement>(null);
-  
+  const dotRef = useRef<HTMLDivElement>(null);
+  const ringRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
+    let mouseX = 0, mouseY = 0;
+    let ringX = 0, ringY = 0;
+
     const move = (e: MouseEvent) => {
-      if (cursorRef.current) {
-        cursorRef.current.style.left = `${e.clientX}px`;
-        cursorRef.current.style.top = `${e.clientY}px`;
+      mouseX = e.clientX; mouseY = e.clientY;
+      if (dotRef.current) {
+        dotRef.current.style.left = `${mouseX}px`;
+        dotRef.current.style.top = `${mouseY}px`;
       }
     };
-    
-    const hoverElements = document.querySelectorAll('a, button, .hoverable');
-    const handleMouseEnter = () => cursorRef.current?.classList.add('hovering');
-    const handleMouseLeave = () => cursorRef.current?.classList.remove('hovering');
+
+    const animateRing = () => {
+      ringX += (mouseX - ringX) * 0.15;
+      ringY += (mouseY - ringY) * 0.15;
+      if (ringRef.current) {
+        ringRef.current.style.left = `${ringX}px`;
+        ringRef.current.style.top = `${ringY}px`;
+      }
+      requestAnimationFrame(animateRing);
+    };
+
+    const addHover = () => ringRef.current?.classList.add('hovering');
+    const removeHover = () => ringRef.current?.classList.remove('hovering');
 
     window.addEventListener('mousemove', move);
-    hoverElements.forEach(el => {
-      el.addEventListener('mouseenter', handleMouseEnter);
-      el.addEventListener('mouseleave', handleMouseLeave);
+    const interval = setInterval(animateRing, 10);
+    
+    const hoverables = document.querySelectorAll('a, button, .hoverable');
+    hoverables.forEach(el => {
+      el.addEventListener('mouseenter', addHover);
+      el.addEventListener('mouseleave', removeHover);
     });
 
     return () => {
       window.removeEventListener('mousemove', move);
-      hoverElements.forEach(el => {
-        el.removeEventListener('mouseenter', handleMouseEnter);
-        el.removeEventListener('mouseleave', handleMouseLeave);
+      clearInterval(interval);
+      hoverables.forEach(el => {
+        el.removeEventListener('mouseenter', addHover);
+        el.removeEventListener('mouseleave', removeHover);
       });
     };
   }, []);
 
-  return <div ref={cursorRef} className="cursor-dot hidden md:block"></div>;
+  return (
+    <>
+      <div ref={dotRef} className="cursor-dot hidden lg:block"></div>
+      <div ref={ringRef} className="cursor-ring hidden lg:block"></div>
+    </>
+  );
 };
 
 // --- NAVBAR ---
@@ -46,36 +85,36 @@ const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
+    const handleScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const links = ["Home", "About", "Services", "Solutions", "Portfolio", "Process", "Contact"];
+  const links = ["Home", "About", "Services", "Solutions", "Work", "Process", "Contact"];
   
   return (
     <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${scrolled ? 'glass py-4' : 'bg-transparent py-6'}`}>
       <div className="container mx-auto flex justify-between items-center px-6">
-        <a href="#home" className="font-display text-2xl font-bold tracking-wider">
+        <a href="#home" className="font-display text-2xl tracking-tight">
           BRIXO<span className="text-accent">-</span>TECHFX
         </a>
         
         <ul className="hidden lg:flex space-x-8">
           {links.map(link => (
             <li key={link}>
-              <a href={`#${link.toLowerCase()}`} className="text-sm uppercase tracking-widest hover:text-accent transition-colors relative group">
+              <a href={`#${link.toLowerCase()}`} className="text-sm font-medium text-gray-400 hover:text-white transition-colors relative group">
                 {link}
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-accent group-hover:w-full transition-all duration-300"></span>
+                <span className="absolute -bottom-1 left-0 w-0 h-px bg-accent group-hover:w-full transition-all duration-300"></span>
               </a>
             </li>
           ))}
         </ul>
 
-        <a href="#contact" className="hidden lg:flex items-center gap-2 bg-accent text-primary px-6 py-2 rounded-full font-semibold text-sm hover:bg-white transition-colors">
-          START A PROJECT <ArrowRight size={14} />
+        <a href="#contact" className="hidden lg:flex items-center gap-2 bg-white text-black px-5 py-2.5 rounded-full font-semibold text-sm hover:bg-accent transition-colors group">
+          START A PROJECT <ArrowUpRight size={16} className="group-hover:rotate-45 transition-transform" />
         </a>
 
-        <button className="lg:hidden" onClick={() => setMenuOpen(!menuOpen)}>
+        <button className="lg:hidden text-white z-50" onClick={() => setMenuOpen(!menuOpen)}>
           {menuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
@@ -85,7 +124,7 @@ const Navbar = () => {
         <ul className="space-y-8 text-center">
           {links.map(link => (
             <li key={link}>
-              <a href={`#${link.toLowerCase()}`} onClick={() => setMenuOpen(false)} className="text-3xl font-display hover:text-accent transition-colors">
+              <a href={`#${link.toLowerCase()}`} onClick={() => setMenuOpen(false)} className="text-4xl font-display hover:text-accent transition-colors">
                 {link}
               </a>
             </li>
@@ -101,69 +140,76 @@ const Hero = () => {
   return (
     <section id="home" className="relative min-h-screen flex items-center grid-bg overflow-hidden pt-24">
       {/* Gradient Orbs */}
-      <div className="absolute top-1/4 -left-20 w-96 h-96 bg-accent-blue/30 rounded-full filter blur-[120px]"></div>
-      <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-accent/20 rounded-full filter blur-[120px]"></div>
+      <div className="absolute top-1/4 -left-20 w-[500px] h-[500px] bg-accent/10 rounded-full filter blur-[150px]"></div>
+      <div className="absolute bottom-1/4 -right-20 w-[500px] h-[500px] bg-blue-600/10 rounded-full filter blur-[150px]"></div>
 
       <div className="container mx-auto px-6 z-10 grid lg:grid-cols-2 gap-12 items-center">
-        <div className="flex flex-col gap-8">
-          <span className="flex items-center gap-2 text-xs uppercase tracking-[0.3em] text-accent">
-            <span className="w-8 h-px bg-accent"></span> BRIXO-TECHFX®
+        <div className="flex flex-col gap-6">
+          <span className="flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-accent reveal in-view">
+            <span className="w-8 h-px bg-accent"></span> DIGITAL TECHNOLOGY & CREATIVE SOLUTIONS
           </span>
           
-          <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-bold leading-[0.9] tracking-tighter">
-            WE <span className="gradient-text">DESIGN.</span><br/>
-            WE <span className="gradient-text">BUILD.</span><br/>
+          <h1 className="font-display text-6xl md:text-7xl xl:text-8xl reveal in-view">
+            WE DESIGN.<br/>
+            WE BUILD.<br/>
             WE <span className="gradient-text">SOLVE.</span>
           </h1>
 
-          <p className="text-lg text-gray-400 max-w-xl">
+          <p className="text-lg text-gray-400 max-w-xl reveal in-view">
             Creative design, intelligent technology and powerful digital solutions engineered to move businesses forward.
           </p>
 
-          <div className="flex gap-4 mt-4">
-            <a href="#contact" className="bg-accent text-primary px-8 py-4 rounded-full font-semibold flex items-center gap-2 hover:bg-white transition-colors group">
-              START A PROJECT <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+          <div className="flex gap-4 mt-4 reveal in-view">
+            <a href="#contact" className="bg-accent text-black px-8 py-4 rounded-full font-semibold flex items-center gap-2 hover:bg-white transition-colors group">
+              START A PROJECT <ArrowUpRight size={18} className="group-hover:rotate-45 transition-transform" />
             </a>
-            <a href="#portfolio" className="border border-white/20 text-white px-8 py-4 rounded-full font-semibold hover:border-accent hover:text-accent transition-colors">
+            <a href="#work" className="border border-white/20 text-white px-8 py-4 rounded-full font-semibold hover:border-accent hover:text-accent transition-colors">
               EXPLORE OUR WORK
             </a>
           </div>
 
-          <div className="mt-12 border-t border-white/10 pt-6">
+          <div className="mt-12 border-t border-white/10 pt-6 reveal in-view">
             <p className="text-xs uppercase tracking-widest text-gray-500">Trusted Digital Solutions for Modern Businesses</p>
           </div>
         </div>
 
-        {/* 3D Abstract Composition */}
+        {/* Redesigned 3D Abstract Tech Composition */}
         <div className="hidden lg:block relative h-[600px]">
-          <div className="absolute inset-0 flex items-center justify-center animate-float">
-            <div className="relative w-80 h-96 glass rounded-2xl p-6 transform rotate-6 hoverable">
-              <div className="w-full h-32 bg-gradient-to-br from-accent-blue to-accent rounded-lg mb-4 flex items-center justify-center">
-                <Globe size={48} className="text-white" />
-              </div>
-              <div className="space-y-2">
-                <div className="h-4 w-3/4 bg-white/20 rounded"></div>
-                <div className="h-4 w-1/2 bg-white/10 rounded"></div>
-                <div className="h-20 w-full bg-white/5 rounded mt-4"></div>
-              </div>
-            </div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            {/* Orbital Rings */}
+            <div className="absolute w-[400px] h-[400px] border border-accent/10 rounded-full animate-spin" style={{ animationDuration: '20s' }}></div>
+            <div className="absolute w-[300px] h-[300px] border border-accent/20 rounded-full animate-spin" style={{ animationDuration: '15s', animationDirection: 'reverse' }}></div>
             
-            <div className="absolute top-10 right-10 w-48 h-64 glass rounded-2xl p-4 transform -rotate-3 animate-float" style={{ animationDelay: '1s' }}>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+            {/* Central Glowing Core */}
+            <div className="absolute w-40 h-40 bg-gradient-to-br from-accent to-blue-600 rounded-full filter blur-2xl opacity-40"></div>
+            
+            {/* Floating UI Card 1: Analytics */}
+            <div className="absolute top-10 right-0 w-64 glass rounded-2xl p-5 backdrop-blur-xl animate-float hoverable" style={{ animationDelay: '0s' }}>
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-xs text-gray-400 uppercase tracking-widest">Analytics</span>
+                <span className="text-xs text-green-400">+24%</span>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="h-16 bg-accent/20 rounded"></div>
-                <div className="h-16 bg-accent/10 rounded"></div>
-                <div className="h-16 bg-accent/30 rounded"></div>
-                <div className="h-16 bg-accent/5 rounded"></div>
+              <div className="h-20 w-full bg-gradient-to-br from-accent/20 to-transparent rounded-lg flex items-end p-2 gap-1">
+                {[40, 65, 50, 80, 60, 90].map((h, i) => (
+                  <div key={i} style={{ height: `${h}%` }} className="w-2 bg-accent rounded-t"></div>
+                ))}
               </div>
             </div>
 
-            <div className="absolute bottom-10 left-10 w-32 h-32 bg-gradient-to-br from-accent to-accent-blue rounded-full opacity-80 filter blur-xl"></div>
-            <div className="absolute top-1/2 left-1/2 w-40 h-40 border border-accent/30 rounded-3xl rotate-45"></div>
+            {/* Floating UI Card 2: Code Block */}
+            <div className="absolute bottom-10 left-0 w-72 glass rounded-2xl p-5 backdrop-blur-xl animate-float hoverable" style={{ animationDelay: '1.5s' }}>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-2.5 h-2.5 bg-red-500 rounded-full"></div>
+                <div className="w-2.5 h-2.5 bg-yellow-500 rounded-full"></div>
+                <div className="w-2.5 h-2.5 bg-green-500 rounded-full"></div>
+              </div>
+              <div className="space-y-2 font-mono text-xs">
+                <div className="text-accent">const solution = build({{</div>
+                <div className="text-gray-300 pl-4">type: 'web',</div>
+                <div className="text-gray-300 pl-4">stack: 'React',</div>
+                <div className="text-accent">}});</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -172,7 +218,25 @@ const Hero = () => {
 };
 
 // --- TRUST STRIP ---
+const useCountUp = (target: number, start: boolean, duration = 2000) => {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (!start) return;
+    let startTime: number;
+    const animate = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      setCount(Math.floor(progress * target * (100 / 100)) * (progress === 1 ? 1 : 1));
+      if (progress < 1) requestAnimationFrame(animate);
+    };
+    requestAnimationFrame(animate);
+  }, [start, target, duration]);
+  return count;
+};
+
 const TrustStrip = () => {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref);
   const stats = [
     { num: 50, suffix: "+", label: "Projects" },
     { num: 6, suffix: "+", label: "Services" },
@@ -181,18 +245,18 @@ const TrustStrip = () => {
   ];
 
   return (
-    <section className="border-y border-white/10 py-20 bg-secondary/30">
+    <section ref={ref} className="border-y border-white/5 py-20 bg-secondary/20 relative z-10">
       <div className="container mx-auto px-6">
-        <h2 className="text-center font-display text-2xl md:text-3xl mb-12 text-gray-300">
+        <h2 className="text-center font-display text-2xl md:text-4xl mb-12 text-gray-300 tracking-tight">
           CREATIVE TECHNOLOGY FOR AMBITIOUS BUSINESSES.
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {stats.map((stat, i) => (
             <div key={i} className="text-center group">
-              <h3 className="text-5xl md:text-6xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-accent group-hover:from-accent transition-all">
-                {stat.num}{stat.suffix}
+              <h3 className="text-5xl md:text-6xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 group-hover:from-accent group-hover:to-accent transition-all duration-500">
+                {useCountUp(stat.num, inView)}{stat.suffix}
               </h3>
-              <p className="text-sm uppercase tracking-widest text-gray-400 mt-2">{stat.label}</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-gray-500 mt-2">{stat.label}</p>
             </div>
           ))}
         </div>
@@ -203,29 +267,35 @@ const TrustStrip = () => {
 
 // --- ABOUT ---
 const About = () => {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref);
+
   return (
     <section id="about" className="py-32 relative overflow-hidden">
-      <div className="container mx-auto px-6 grid lg:grid-cols-2 gap-20 items-center">
-        <div>
-          <h2 className="font-display text-4xl md:text-6xl font-bold leading-tight tracking-tight">
-            WE TURN IDEAS<br/>INTO DIGITAL<br/><span className="text-accent">EXPERIENCES.</span>
+      <div className="absolute top-0 left-0 w-full h-full grid-bg opacity-30"></div>
+      <div className="container mx-auto px-6 grid lg:grid-cols-2 gap-20 items-center relative z-10">
+        <div ref={ref} className={`reveal ${inView ? 'in-view' : ''}`}>
+          <span className="text-xs uppercase tracking-[0.3em] text-accent">Who We Are</span>
+          <h2 className="font-display text-5xl md:text-6xl mt-4 tracking-tight">
+            WE TURN IDEAS<br/>INTO DIGITAL<br/><span className="gradient-text">EXPERIENCES.</span>
           </h2>
-          <a href="#services" className="inline-flex items-center gap-2 mt-8 text-accent font-semibold group">
-            Learn More <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform" />
-          </a>
         </div>
         
         <div className="relative">
-          <div className="glass p-8 rounded-2xl relative z-10">
-            <p className="text-lg text-gray-300 leading-relaxed">
+          <div className="glass p-8 rounded-2xl relative z-10 border-l-2 border-accent">
+            <p className="text-lg text-gray-300 leading-relaxed mb-6">
               Brixo-TechFX combines creativity, technology and strategic thinking to create digital solutions that help brands communicate better, operate smarter and grow faster.
             </p>
+            <a href="#contact" className="inline-flex items-center gap-2 mt-4 text-accent font-semibold group">
+              Learn More <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform" />
+            </a>
           </div>
-          <div className="absolute -bottom-10 -left-10 w-48 h-32 glass p-6 rounded-2xl flex flex-col justify-center z-20 border-l-4 border-accent">
-            <p className="text-4xl font-display font-bold text-accent">5+</p>
-            <p className="text-xs uppercase tracking-widest mt-1">Years Experience</p>
+          {/* Floating Statistics Card */}
+          <div className="absolute -bottom-12 -left-12 w-48 h-36 glass p-6 rounded-2xl flex flex-col justify-center z-20 border-t-2 border-accent">
+            <p className="text-5xl font-display font-bold gradient-text">98%</p>
+            <p className="text-xs uppercase tracking-widest mt-1 text-gray-400">Client Satisfaction</p>
           </div>
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-accent/10 rounded-full filter blur-2xl"></div>
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-accent/10 rounded-full filter blur-3xl"></div>
         </div>
       </div>
     </section>
@@ -234,6 +304,9 @@ const About = () => {
 
 // --- SERVICES ---
 const Services = () => {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref);
+  
   const services = [
     { num: "01", icon: Palette, title: "Graphic Design", desc: "Creative visual designs that communicate your message and make your brand stand out.", features: ["Logo Design", "Social Media Kit", "Print Collateral"] },
     { num: "02", icon: Image, title: "Photo Editing", desc: "Professional photo editing and retouching for polished, high-quality results.", features: ["Retouching", "Color Correction", "Background Removal"] },
@@ -243,41 +316,53 @@ const Services = () => {
     { num: "06", icon: IdCard, title: "Branding Solutions", desc: "Complete branding and visual identity solutions designed to build trust.", features: ["Brand Strategy", "Visual Identity", "Style Guide"] },
   ];
 
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    e.currentTarget.style.setProperty('--mouse-x', `${x}px`);
+    e.currentTarget.style.setProperty('--mouse-y', `${y}px`);
+  };
+
   return (
-    <section id="services" className="py-32 bg-secondary/30 grid-bg">
+    <section id="services" className="py-32 bg-secondary/20 relative">
       <div className="container mx-auto px-6">
         <div className="max-w-2xl mb-16">
           <span className="text-xs uppercase tracking-[0.3em] text-accent">Our Expertise</span>
-          <h2 className="font-display text-4xl md:text-6xl font-bold mt-4">Everything you need to build, improve and grow.</h2>
+          <h2 className="font-display text-5xl md:text-6xl mt-4 tracking-tight">Everything you need to build, improve and grow.</h2>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-px bg-white/5 border border-white/5 rounded-2xl overflow-hidden">
           {services.map((s, i) => (
-            <div key={i} className="group glass p-8 rounded-2xl hover:border-accent/50 transition-all duration-500 relative overflow-hidden hoverable">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-full filter blur-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              
-              <div className="flex justify-between items-start mb-6 relative z-10">
-                <div className="w-14 h-14 rounded-xl bg-primary border border-white/10 flex items-center justify-center group-hover:bg-accent group-hover:text-primary transition-colors">
-                  <s.icon size={24} />
-                </div>
-                <span className="font-display text-5xl font-bold text-white/5 group-hover:text-accent/20 transition-colors">{s.num}</span>
-              </div>
+            <div 
+              key={i} 
+              className="group relative bg-primary p-8 hoverable transition-colors duration-300"
+              onMouseMove={handleMouseMove}
+            >
+              {/* Mouse-following glow */}
+              <div 
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                style={{ background: 'radial-gradient(200px circle at var(--mouse-x) var(--mouse-y), rgba(0, 209, 255, 0.1), transparent 80%)' }}
+              ></div>
 
-              <h3 className="text-xl font-display font-bold mb-3">{s.title}</h3>
-              <p className="text-gray-400 text-sm mb-6">{s.desc}</p>
-              
-              <div className="overflow-hidden max-h-0 group-hover:max-h-40 transition-all duration-500 ease-in-out">
-                <div className="border-t border-white/10 pt-4 space-y-2">
-                  {s.features.map((f, i) => (
-                    <div key={i} className="flex items-center gap-2 text-sm text-gray-300">
-                      <Check size={14} className="text-accent" /> {f}
-                    </div>
-                  ))}
+              <div className="relative z-10 flex flex-col h-full">
+                <div className="flex justify-between items-start mb-8">
+                  <div className="w-14 h-14 rounded-xl glass flex items-center justify-center group-hover:bg-accent group-hover:text-black transition-colors">
+                    <s.icon size={24} />
+                  </div>
+                  <span className="font-display text-6xl font-bold text-white/5 group-hover:text-accent/20 transition-colors">{s.num}</span>
                 </div>
-              </div>
 
-              <div className="mt-6 flex items-center text-accent text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
-                Learn More <ArrowRight size={14} className="ml-2" />
+                <h3 className="text-2xl font-display mb-4">{s.title}</h3>
+                <p className="text-gray-400 text-sm mb-6">{s.desc}</p>
+                
+                <div className="mt-auto pt-6 border-t border-white/5">
+                  <div className="flex flex-wrap gap-2">
+                    {s.features.map((f, i) => (
+                      <span key={i} className="text-xs text-gray-400 bg-white/5 px-3 py-1 rounded-full">{f}</span>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           ))}
@@ -289,6 +374,9 @@ const Services = () => {
 
 // --- SOLUTIONS ---
 const Solutions = () => {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref);
+
   const solutions = [
     { num: "01", title: "Websites", icon: Globe, color: "from-blue-500 to-cyan-400" },
     { num: "02", title: "Business Software", icon: Code, color: "from-indigo-500 to-blue-500" },
@@ -300,7 +388,8 @@ const Solutions = () => {
     <section id="solutions" className="py-32 relative">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
-          <h2 className="font-display text-4xl md:text-6xl font-bold">DIGITAL SOLUTIONS BUILT FOR IMPACT</h2>
+          <span className="text-xs uppercase tracking-[0.3em] text-accent">Impactful Solutions</span>
+          <h2 className="font-display text-5xl md:text-6xl mt-4 tracking-tight">DIGITAL SOLUTIONS BUILT FOR IMPACT</h2>
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {solutions.map((s, i) => (
@@ -312,7 +401,7 @@ const Solutions = () => {
                 <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${s.color} flex items-center justify-center mb-4`}>
                   <s.icon size={24} className="text-white" />
                 </div>
-                <h3 className="text-2xl font-display font-bold">{s.title}</h3>
+                <h3 className="text-2xl font-display">{s.title}</h3>
                 <div className="flex items-center text-accent mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   Explore <ArrowRight size={16} className="ml-2" />
                 </div>
@@ -331,29 +420,29 @@ const Portfolio = () => {
   const [activeFilter, setActiveFilter] = useState("All");
   
   const projects = [
-    { title: "E-Commerce UI/UX", cat: "Websites", year: "2024", desc: "High-converting e-commerce platform with seamless checkout." },
-    { title: "Healthcare Brand", cat: "Branding", year: "2024", desc: "Complete visual identity for a modern healthcare provider." },
-    { title: "Corporate CRM", cat: "Software", year: "2023", desc: "Custom CRM solution for enterprise sales teams." },
-    { title: "Fashion Retouching", cat: "Photo", year: "2024", desc: "High-end photo retouching for a fashion campaign." },
-    { title: "Fintech App Design", cat: "Design", year: "2023", desc: "Intuitive financial dashboard UI/UX design." },
+    { title: "E-Commerce Platform", cat: "Websites", year: "2024", desc: "High-converting e-commerce platform with seamless checkout." },
+    { title: "Healthcare Brand Identity", cat: "Branding", year: "2024", desc: "Complete visual identity for a modern healthcare provider." },
+    { title: "Corporate CRM System", cat: "Software", year: "2023", desc: "Custom CRM solution for enterprise sales teams." },
+    { title: "Fashion Campaign Retouching", cat: "Photo", year: "2024", desc: "High-end photo retouching for a fashion campaign." },
+    { title: "Fintech App UI/UX", cat: "Design", year: "2023", desc: "Intuitive financial dashboard UI/UX design." },
   ];
 
   const filtered = activeFilter === "All" ? projects : projects.filter(p => p.cat === activeFilter);
 
   return (
-    <section id="portfolio" className="py-32 bg-secondary/30 grid-bg">
+    <section id="work" className="py-32 bg-secondary/20">
       <div className="container mx-auto px-6">
         <div className="flex flex-wrap justify-between items-end mb-12 gap-8">
           <div>
             <span className="text-xs uppercase tracking-[0.3em] text-accent">Selected Work</span>
-            <h2 className="font-display text-4xl md:text-6xl font-bold mt-4">A glimpse into what we can create.</h2>
+            <h2 className="font-display text-5xl md:text-6xl mt-4 tracking-tight">A glimpse into what we can create.</h2>
           </div>
           <div className="flex flex-wrap gap-2">
             {filters.map(f => (
               <button 
                 key={f} 
                 onClick={() => setActiveFilter(f)}
-                className={`px-4 py-2 text-sm rounded-full border transition-colors ${activeFilter === f ? 'bg-accent text-primary border-accent' : 'border-white/20 hover:border-accent'}`}
+                className={`px-4 py-2 text-sm rounded-full border transition-colors ${activeFilter === f ? 'bg-accent text-black border-accent' : 'border-white/20 hover:border-accent hover:text-accent'}`}
               >
                 {f}
               </button>
@@ -364,17 +453,17 @@ const Portfolio = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 auto-rows-fr">
           {filtered.map((p, i) => (
             <div key={i} className={`group relative overflow-hidden rounded-2xl hoverable ${i === 0 ? 'lg:row-span-2 h-96 lg:h-auto' : 'h-80'}`}>
-              <div className="absolute inset-0 bg-gradient-to-br from-secondary to-primary border border-white/10"></div>
-              <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/80 to-transparent opacity-80 group-hover:opacity-100 transition-opacity"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-secondary to-primary border border-white/5 group-hover:border-accent/30 transition-colors"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent opacity-80 group-hover:opacity-100 transition-opacity"></div>
               
-              <div className="absolute inset-0 p-8 flex flex-col justify-end transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+              <div className="absolute inset-0 p-8 flex flex-col justify-end transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
                 <span className="text-xs uppercase tracking-widest text-accent">{p.cat} • {p.year}</span>
-                <h3 className="text-2xl font-display font-bold mt-2">{p.title}</h3>
+                <h3 className="text-2xl font-display mt-2">{p.title}</h3>
                 <p className="text-gray-400 text-sm mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
                   {p.desc}
                 </p>
                 <div className="flex items-center text-white mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-200">
-                  View Project <ArrowRight size={16} className="ml-2" />
+                  View Project <ArrowUpRight size={16} className="ml-2" />
                 </div>
               </div>
             </div>
@@ -398,25 +487,27 @@ const Process = () => {
   return (
     <section id="process" className="py-32">
       <div className="container mx-auto px-6">
-        <div className="text-center mb-16">
+        <div className="text-center mb-20">
           <span className="text-xs uppercase tracking-[0.3em] text-accent">How We Work</span>
-          <h2 className="font-display text-4xl md:text-6xl font-bold mt-4">OUR PROCESS</h2>
+          <h2 className="font-display text-5xl md:text-6xl mt-4 tracking-tight">OUR PROCESS</h2>
         </div>
         
-        <div className="relative">
-          <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/10 hidden md:block"></div>
+        <div className="relative max-w-3xl mx-auto">
+          {/* Continuous Vertical Line */}
+          <div className="absolute left-6 top-0 bottom-0 w-px bg-gradient-to-b from-accent via-accent/20 to-transparent"></div>
+          
           <div className="space-y-12">
             {steps.map((s, i) => (
-              <div key={i} className={`flex flex-col md:flex-row items-center gap-8 ${i % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'}`}>
-                <div className="flex-1 glass p-8 rounded-2xl hover:border-accent/50 transition-colors w-full relative">
-                  <div className="flex items-center gap-4 mb-4">
-                    <span className="text-4xl font-display font-bold text-accent">{s.num}</span>
-                    <h3 className="text-2xl font-display font-bold">{s.title}</h3>
-                  </div>
+              <div key={i} className="relative pl-20 group">
+                {/* Node */}
+                <div className="absolute left-0 top-0 w-12 h-12 rounded-full glass flex items-center justify-center text-accent group-hover:bg-accent group-hover:text-black transition-colors z-10">
+                  {i + 1}
+                </div>
+                
+                <div className="glass p-6 rounded-xl hover:border-accent/30 transition-colors">
+                  <h3 className="text-2xl font-display mb-2">{s.title}</h3>
                   <p className="text-gray-400">{s.desc}</p>
                 </div>
-                <div className="w-4 h-4 rounded-full bg-accent z-10 border-4 border-primary"></div>
-                <div className="flex-1"></div>
               </div>
             ))}
           </div>
@@ -426,146 +517,149 @@ const Process = () => {
   );
 };
 
-// --- CONTACT CTA ---
-const ContactCTA = () => {
-  return (
-    <section className="py-32 relative overflow-hidden">
-      <div className="absolute inset-0 grid-bg"></div>
-      <div className="container mx-auto px-6 relative z-10 text-center">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-accent/10 rounded-full filter blur-[150px]"></div>
-        <h2 className="font-display text-4xl md:text-7xl font-bold tracking-tighter relative">
-          LET'S BUILD YOUR<br/><span className="gradient-text">NEXT BIG IDEA.</span>
-        </h2>
-        <p className="text-lg text-gray-400 mt-6 max-w-2xl mx-auto">
-          Tell us what you want to build. We'll help turn the idea into a professional digital solution.
-        </p>
-        <a href="#contact" className="inline-flex items-center gap-2 bg-accent text-primary px-8 py-4 rounded-full font-semibold mt-8 hover:bg-white transition-colors group">
-          REQUEST A QUOTE <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-        </a>
-      </div>
-    </section>
-  );
-};
+// --- PRICING CTA ---
+const ContactCTA = () => (
+  <section className="py-32 relative overflow-hidden">
+    <div className="absolute inset-0 grid-bg"></div>
+    <div className="container mx-auto px-6 relative z-10 text-center">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-accent/5 rounded-full filter blur-[150px]"></div>
+      <h2 className="font-display text-5xl md:text-7xl tracking-tight relative">
+        LET'S BUILD YOUR<br/><span className="gradient-text">NEXT BIG IDEA.</span>
+      </h2>
+      <p className="text-lg text-gray-400 mt-6 max-w-2xl mx-auto">
+        Tell us what you want to build. We'll help turn the idea into a professional digital solution.
+      </p>
+      <a href="#contact" className="inline-flex items-center gap-2 bg-accent text-black px-8 py-4 rounded-full font-semibold mt-8 hover:bg-white transition-colors group">
+        REQUEST A QUOTE <ArrowUpRight size={18} className="group-hover:rotate-45 transition-transform" />
+      </a>
+    </div>
+  </section>
+);
 
 // --- CONTACT ---
-const Contact = () => {
-  return (
-    <section id="contact" className="py-32 bg-secondary/30">
-      <div className="container mx-auto px-6 grid lg:grid-cols-2 gap-16">
-        <div>
-          <h2 className="font-display text-4xl md:text-6xl font-bold tracking-tight">HAVE A PROJECT<br/>IN MIND?</h2>
-          <p className="text-gray-400 mt-6 mb-12">Let's discuss how we can help you achieve your digital goals.</p>
-          
-          <div className="grid sm:grid-cols-2 gap-6">
-            <div className="glass p-6 rounded-xl flex items-center gap-4 hoverable">
-              <Mail className="text-accent" size={24} />
-              <div><p className="text-xs text-gray-500 uppercase">Email</p><a href="mailto:hello@brixotechfx.com" className="hover:text-accent">hello@brixotechfx.com</a></div>
+const Contact = () => (
+  <section id="contact" className="py-32 bg-secondary/20">
+    <div className="container mx-auto px-6 grid lg:grid-cols-2 gap-16">
+      <div>
+        <span className="text-xs uppercase tracking-[0.3em] text-accent">Get In Touch</span>
+        <h2 className="font-display text-5xl md:text-6xl mt-4 tracking-tight">HAVE A PROJECT<br/>IN MIND?</h2>
+        <p className="text-gray-400 mt-6 mb-12">Let's discuss how we can help you achieve your digital goals.</p>
+        
+        <div className="grid sm:grid-cols-2 gap-6">
+          <div className="glass p-6 rounded-xl flex items-center gap-4 hoverable">
+            <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
+              <Mail className="text-accent" size={20} />
             </div>
-            <div className="glass p-6 rounded-xl flex items-center gap-4 hoverable">
-              <Phone className="text-accent" size={24} />
-              <div><p className="text-xs text-gray-500 uppercase">Phone</p><a href="tel:+1234567890" className="hover:text-accent">+1 (234) 567-890</a></div>
+            <div><p className="text-xs text-gray-500 uppercase">Email</p><a href="mailto:hello@brixotechfx.com" className="hover:text-accent">hello@brixotechfx.com</a></div>
+          </div>
+          <div className="glass p-6 rounded-xl flex items-center gap-4 hoverable">
+            <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
+              <Phone className="text-accent" size={20} />
             </div>
+            <div><p className="text-xs text-gray-500 uppercase">Phone</p><a href="tel:+1234567890" className="hover:text-accent">+1 (234) 567-890</a></div>
           </div>
         </div>
-
-        <form className="glass p-8 rounded-2xl space-y-6">
-          <div className="grid md:grid-cols-2 gap-6">
-            <input type="text" placeholder="Full Name" required className="w-full bg-primary/50 border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-accent transition-colors" />
-            <input type="email" placeholder="Email Address" required className="w-full bg-primary/50 border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-accent transition-colors" />
-          </div>
-          <div className="grid md:grid-cols-2 gap-6">
-            <input type="text" placeholder="Phone Number" className="w-full bg-primary/50 border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-accent transition-colors" />
-            <input type="text" placeholder="Company Name" className="w-full bg-primary/50 border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-accent transition-colors" />
-          </div>
-          <div className="grid md:grid-cols-2 gap-6">
-            <select className="w-full bg-primary/50 border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-accent transition-colors">
-              <option>Select Service</option>
-              <option>Website Development</option>
-              <option>Software Development</option>
-              <option>Branding</option>
-            </select>
-            <select className="w-full bg-primary/50 border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-accent transition-colors">
-              <option>Select Budget</option>
-              <option>$1k - $5k</option>
-              <option>$5k - $10k</option>
-              <option>$10k+</option>
-            </select>
-          </div>
-          <textarea placeholder="Project Details" rows={4} className="w-full bg-primary/50 border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-accent transition-colors"></textarea>
-          
-          <button type="submit" className="w-full bg-accent text-primary py-4 rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-white transition-colors group">
-            SEND PROJECT REQUEST <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-          </button>
-        </form>
       </div>
-    </section>
-  );
-};
+
+      <form className="glass p-8 rounded-2xl space-y-6">
+        <div className="grid md:grid-cols-2 gap-6">
+          <input type="text" placeholder="Full Name" required className="input-field" />
+          <input type="email" placeholder="Email Address" required className="input-field" />
+        </div>
+        <div className="grid md:grid-cols-2 gap-6">
+          <input type="text" placeholder="Phone Number" className="input-field" />
+          <input type="text" placeholder="Company Name" className="input-field" />
+        </div>
+        <div className="grid md:grid-cols-2 gap-6">
+          <select className="input-field">
+            <option>Select Service</option>
+            <option>Website Development</option>
+            <option>Software Development</option>
+            <option>Branding</option>
+          </select>
+          <select className="input-field">
+            <option>Select Budget</option>
+            <option>$1k - $5k</option>
+            <option>$5k - $10k</option>
+            <option>$10k+</option>
+          </select>
+        </div>
+        <textarea placeholder="Project Details" rows={4} className="input-field resize-none"></textarea>
+        
+        <button type="submit" className="w-full bg-accent text-black py-4 rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-white transition-colors group">
+          SEND PROJECT REQUEST <ArrowUpRight size={18} className="group-hover:rotate-45 transition-transform" />
+        </button>
+      </form>
+    </div>
+  </section>
+);
 
 // --- FOOTER ---
-const Footer = () => {
-  return (
-    <footer className="bg-primary pt-20 pb-8 border-t border-white/10">
-      <div className="container mx-auto px-6">
-        <div className="grid md:grid-cols-4 gap-12 mb-12">
-          <div className="md:col-span-2">
-            <h3 className="font-display text-3xl font-bold mb-4">BRIXO<span className="text-accent">-</span>TECHFX</h3>
-            <p className="text-gray-400 max-w-md">Creative Design. Smart Technology. Real Solutions. Transforming ideas into professional digital experiences.</p>
-            <div className="flex gap-4 mt-6">
-              {[Facebook, Instagram, Twitter, Linkedin, MessageCircle].map((Icon, i) => (
-                <a key={i} href="#" className="w-10 h-10 border border-white/20 rounded-full flex items-center justify-center hover:bg-accent hover:text-primary hover:border-accent transition-colors hoverable">
-                  <Icon size={18} />
-                </a>
-              ))}
-            </div>
-          </div>
-          
-          <div>
-            <h4 className="font-display font-bold mb-4 uppercase tracking-widest text-sm">Navigation</h4>
-            <ul className="space-y-2 text-gray-400">
-              <li><a href="#home" className="hover:text-accent">Home</a></li>
-              <li><a href="#about" className="hover:text-accent">About</a></li>
-              <li><a href="#portfolio" className="hover:text-accent">Portfolio</a></li>
-              <li><a href="#contact" className="hover:text-accent">Contact</a></li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-display font-bold mb-4 uppercase tracking-widest text-sm">Services</h4>
-            <ul className="space-y-2 text-gray-400">
-              <li><a href="#services" className="hover:text-accent">Web Development</a></li>
-              <li><a href="#services" className="hover:text-accent">Software Solutions</a></li>
-              <li><a href="#services" className="hover:text-accent">Branding</a></li>
-              <li><a href="#services" className="hover:text-accent">Hospital Systems</a></li>
-            </ul>
+const Footer = () => (
+  <footer className="bg-primary pt-20 pb-8 border-t border-white/5 relative overflow-hidden">
+    <div className="container mx-auto px-6">
+      <div className="grid md:grid-cols-4 gap-12 mb-12">
+        <div className="md:col-span-2">
+          <h3 className="font-display text-3xl mb-4">BRIXO<span className="text-accent">-</span>TECHFX</h3>
+          <p className="text-gray-400 max-w-md mb-6">Creative Design. Smart Technology. Real Solutions. Transforming ideas into professional digital experiences.</p>
+          <div className="flex gap-4">
+            {[Facebook, Instagram, Twitter, Linkedin, MessageCircle].map((Icon, i) => (
+              <a key={i} href="#" className="w-10 h-10 border border-white/10 rounded-full flex items-center justify-center hover:bg-accent hover:text-black hover:border-accent transition-colors hoverable">
+                <Icon size={16} />
+              </a>
+            ))}
           </div>
         </div>
+        
+        <div>
+          <h4 className="font-display font-bold mb-4 uppercase tracking-widest text-sm">Navigation</h4>
+          <ul className="space-y-2 text-gray-400">
+            <li><a href="#home" className="hover:text-accent">Home</a></li>
+            <li><a href="#about" className="hover:text-accent">About</a></li>
+            <li><a href="#work" className="hover:text-accent">Work</a></li>
+            <li><a href="#contact" className="hover:text-accent">Contact</a></li>
+          </ul>
+        </div>
 
-        {/* Animated line */}
-        <div className="w-full h-px bg-gradient-to-r from-transparent via-accent to-transparent mb-8"></div>
-
-        <div className="flex flex-col md:flex-row justify-between items-center text-sm text-gray-500">
-          <p>© 2026 BRIXO-TECHFX. ALL RIGHTS RESERVED.</p>
-          <div className="flex gap-6 mt-4 md:mt-0">
-            <a href="#" className="hover:text-accent">Privacy Policy</a>
-            <a href="#" className="hover:text-accent">Terms & Conditions</a>
-          </div>
+        <div>
+          <h4 className="font-display font-bold mb-4 uppercase tracking-widest text-sm">Services</h4>
+          <ul className="space-y-2 text-gray-400">
+            <li><a href="#services" className="hover:text-accent">Web Development</a></li>
+            <li><a href="#services" className="hover:text-accent">Software Solutions</a></li>
+            <li><a href="#services" className="hover:text-accent">Branding</a></li>
+            <li><a href="#services" className="hover:text-accent">Hospital Systems</a></li>
+          </ul>
         </div>
       </div>
-    </footer>
-  );
-};
+
+      <div className="w-full h-px bg-gradient-to-r from-transparent via-accent to-transparent mb-8"></div>
+
+      <div className="flex flex-col md:flex-row justify-between items-center text-sm text-gray-500">
+        <p>© 2026 BRIXO-TECHFX. ALL RIGHTS RESERVED.</p>
+        <div className="flex gap-6 mt-4 md:mt-0">
+          <a href="#" className="hover:text-accent">Privacy Policy</a>
+          <a href="#" className="hover:text-accent">Terms & Conditions</a>
+        </div>
+      </div>
+    </div>
+    
+    {/* Giant Background Text */}
+    <div className="absolute -bottom-32 left-0 w-full text-center font-display text-[200px] font-bold text-white/[0.02] pointer-events-none select-none tracking-tighter">
+      BRIXO-TECHFX
+    </div>
+  </footer>
+);
 
 // --- WHATSAPP BUTTON ---
 const WhatsAppButton = () => (
   <a 
-    href="https://wa.me/1234567890" // Replace with real number
+    href="https://wa.me/1234567890" 
     target="_blank" 
     rel="noopener noreferrer"
-    className="fixed bottom-8 right-8 z-50 w-14 h-14 bg-green-500 rounded-full flex items-center justify-center shadow-lg shadow-green-500/50 hover:scale-110 transition-transform group"
+    className="fixed bottom-8 right-8 z-50 w-14 h-14 bg-green-500 rounded-full flex items-center justify-center shadow-lg shadow-green-500/30 hover:scale-110 transition-transform group"
   >
-    <MessageCircle size={28} className="text-white" />
-    <span className="absolute right-16 bg-primary text-white text-sm py-2 px-4 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hidden md:block whitespace-nowrap border border-white/20">
+    <MessageCircle size={24} className="text-white" />
+    <span className="absolute right-16 bg-black text-white text-sm py-2 px-4 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hidden md:block whitespace-nowrap border border-white/10">
       Chat with us
     </span>
   </a>
@@ -584,7 +678,7 @@ export default function App() {
   }, [theme]);
 
   return (
-    <div className="bg-primary min-h-screen">
+    <div className="bg-primary min-h-screen overflow-x-hidden">
       <CustomCursor />
       <Navbar />
       <main>
@@ -606,7 +700,7 @@ export default function App() {
         onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
         className="fixed bottom-8 left-8 z-50 w-12 h-12 glass rounded-full flex items-center justify-center hover:border-accent transition-colors"
       >
-        {theme === 'dark' ? <Sparkles size={20} className="text-accent"/> : <Layers size={20} className="text-primary"/>}
+        {theme === 'dark' ? <Sparkles size={20} className="text-accent"/> : <Layers size={20} className="text-black"/>}
       </button>
     </div>
   );
