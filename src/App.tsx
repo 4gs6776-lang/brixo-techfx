@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Menu, X, ArrowUpRight, Check, Star, Facebook, Instagram, 
+  Menu, X, ArrowUpRight, Star, Facebook, Instagram, 
   MessageCircle, Linkedin, Twitter, Mail, Phone, 
   Palette, Image, Globe, HeartPulse, Code, IdCard, 
-  ShieldCheck, Zap, Sparkles, TrendingUp, Layers, ArrowRight, Quote
+  Sparkles, Layers, ArrowRight, Quote
 } from 'lucide-react';
 
 // --- HOOKS ---
-const useInView = (ref: React.RefObject<HTMLElement>) => {
+const useInView = (ref) => {
   const [inView, setInView] = useState(false);
   useEffect(() => {
     const observer = new IntersectionObserver(([entry]) => {
@@ -24,24 +24,24 @@ const useInView = (ref: React.RefObject<HTMLElement>) => {
 
 // --- CUSTOM CURSOR ---
 const CustomCursor = () => {
-  const dotRef = useRef<HTMLDivElement>(null);
-  const ringRef = useRef<HTMLDivElement>(null);
+  const dotRef = useRef(null);
+  const ringRef = useRef(null);
 
   useEffect(() => {
     let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
-    const move = (e: MouseEvent) => {
+    const move = (e) => {
       mouseX = e.clientX; mouseY = e.clientY;
       if (dotRef.current) {
-        dotRef.current.style.left = `${mouseX}px`;
-        dotRef.current.style.top = `${mouseY}px`;
+        dotRef.current.style.left = mouseX + "px";
+        dotRef.current.style.top = mouseY + "px";
       }
     };
     const animateRing = () => {
       ringX += (mouseX - ringX) * 0.15;
       ringY += (mouseY - ringY) * 0.15;
       if (ringRef.current) {
-        ringRef.current.style.left = `${ringX}px`;
-        ringRef.current.style.top = `${ringY}px`;
+        ringRef.current.style.left = ringX + "px";
+        ringRef.current.style.top = ringY + "px";
       }
       requestAnimationFrame(animateRing);
     };
@@ -63,29 +63,29 @@ const CustomCursor = () => {
   }, []);
 
   return (
-    <>
+    <React.Fragment>
       <div ref={dotRef} className="cursor-dot hidden lg:block"></div>
       <div ref={ringRef} className="cursor-ring hidden lg:block"></div>
-    </>
+    </React.Fragment>
   );
 };
 
 // --- MAGNETIC BUTTON ---
-const MagneticButton: React.FC<{ children: React.ReactNode; className?: string; href?: string }> = ({ children, className, href }) => {
-  const ref = useRef<HTMLAnchorElement>(null);
-  const handleMouseMove = (e: React.MouseEvent) => {
+const MagneticButton = ({ children, className, href }) => {
+  const ref = useRef(null);
+  const handleMouseMove = (e) => {
     if (!ref.current) return;
     const rect = ref.current.getBoundingClientRect();
     const x = e.clientX - rect.left - rect.width / 2;
     const y = e.clientY - rect.top - rect.height / 2;
-    ref.current.style.transform = `translate(${x * 0.2}px, ${y * 0.2}px)`;
+    ref.current.style.transform = "translate(" + (x * 0.2) + "px, " + (y * 0.2) + "px)";
   };
-  const handleMouseLeave = () => { if (ref.current) ref.current.style.transform = 'translate(0, 0)'; };
+  const handleMouseLeave = () => { if (ref.current) ref.current.style.transform = "translate(0px, 0px)"; };
 
   return (
     <a 
       ref={ref} href={href} 
-      className={`inline-flex items-center gap-2 transition-transform duration-300 ease-out ${className}`}
+      className={"inline-flex items-center gap-2 transition-transform duration-300 ease-out " + className}
       onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}
     >
       {children}
@@ -105,13 +105,13 @@ const Navbar = () => {
   const links = ["Home", "About", "Services", "Solutions", "Work", "Process", "Contact"];
   
   return (
-    <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${scrolled ? 'glass py-4' : 'bg-transparent py-6'}`}>
+    <nav className={"fixed top-0 w-full z-50 transition-all duration-500 " + (scrolled ? "glass py-4" : "bg-transparent py-6")}>
       <div className="container mx-auto flex justify-between items-center px-6">
         <a href="#home" className="font-display text-2xl tracking-tight">BRIXO<span className="text-accent">-</span>TECHFX</a>
         <ul className="hidden lg:flex space-x-8">
           {links.map(link => (
             <li key={link}>
-              <a href={`#${link.toLowerCase()}`} className="text-sm font-medium text-gray-400 hover:text-white transition-colors relative group">
+              <a href={"#" + link.toLowerCase()} className="text-sm font-medium text-gray-400 hover:text-white transition-colors relative group">
                 {link}
                 <span className="absolute -bottom-1 left-0 w-0 h-px bg-accent group-hover:w-full transition-all duration-300"></span>
               </a>
@@ -125,11 +125,11 @@ const Navbar = () => {
           {menuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
-      <div className={`fixed inset-0 bg-primary z-40 flex flex-col items-center justify-center transition-transform duration-500 ${menuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div className={"fixed inset-0 bg-primary z-40 flex flex-col items-center justify-center transition-transform duration-500 " + (menuOpen ? "translate-x-0" : "translate-x-full")}>
         <ul className="space-y-8 text-center">
           {links.map(link => (
             <li key={link}>
-              <a href={`#${link.toLowerCase()}`} onClick={() => setMenuOpen(false)} className="text-4xl font-display hover:text-accent transition-colors">{link}</a>
+              <a href={"#" + link.toLowerCase()} onClick={() => setMenuOpen(false)} className="text-4xl font-display hover:text-accent transition-colors">{link}</a>
             </li>
           ))}
         </ul>
@@ -140,14 +140,16 @@ const Navbar = () => {
 
 // --- HERO ---
 const Hero = () => {
-  const heroRef = useRef<HTMLDivElement>(null);
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const heroRef = useRef(null);
+  const handleMouseMove = (e) => {
     if (!heroRef.current) return;
-    const { clientX, clientY } = e;
-    const { innerWidth, innerHeight } = window;
+    const clientX = e.clientX;
+    const clientY = e.clientY;
+    const innerWidth = window.innerWidth;
+    const innerHeight = window.innerHeight;
     const x = (clientX / innerWidth - 0.5) * 20;
     const y = (clientY / innerHeight - 0.5) * 20;
-    heroRef.current.style.transform = `perspective(1000px) rotateY(${x}deg) rotateX(${-y}deg)`;
+    heroRef.current.style.transform = "perspective(1000px) rotateY(" + x + "deg) rotateX(" + (-y) + "deg)";
   };
 
   return (
@@ -176,19 +178,24 @@ const Hero = () => {
         </div>
         <div ref={heroRef} className="hidden lg:block relative h-[600px] transition-transform duration-200 ease-out">
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="absolute w-[400px] h-[400px] border border-accent/10 rounded-full animate-spin" style={{ animationDuration: '20s' }}></div>
-            <div className="absolute w-[300px] h-[300px] border border-accent/20 rounded-full animate-spin" style={{ animationDuration: '15s', animationDirection: 'reverse' }}></div>
+            <div className="absolute w-[400px] h-[400px] border border-accent/10 rounded-full animate-spin" style={{ animationDuration: "20s" }}></div>
+            <div className="absolute w-[300px] h-[300px] border border-accent/20 rounded-full animate-spin" style={{ animationDuration: "15s", animationDirection: "reverse" }}></div>
             <div className="absolute w-40 h-40 bg-gradient-to-br from-accent to-blue-600 rounded-full filter blur-2xl opacity-40"></div>
-            <div className="absolute top-10 right-0 w-64 glass rounded-2xl p-5 backdrop-blur-xl animate-float" style={{ transform: 'translateZ(40px)' }}>
+            <div className="absolute top-10 right-0 w-64 glass rounded-2xl p-5 backdrop-blur-xl animate-float" style={{ transform: "translateZ(40px)" }}>
               <div className="flex justify-between items-center mb-4">
                 <span className="text-xs text-gray-400 uppercase tracking-widest">Analytics</span>
                 <span className="text-xs text-green-400">+24%</span>
               </div>
               <div className="h-20 w-full bg-gradient-to-br from-accent/20 to-transparent rounded-lg flex items-end p-2 gap-1">
-                {[40, 65, 50, 80, 60, 90].map((h, i) => (<div key={i} style={{ height: `${h}%` }} className="w-2 bg-accent rounded-t"></div>))}
+                <div style={{ height: "40%" }} className="w-2 bg-accent rounded-t"></div>
+                <div style={{ height: "65%" }} className="w-2 bg-accent rounded-t"></div>
+                <div style={{ height: "50%" }} className="w-2 bg-accent rounded-t"></div>
+                <div style={{ height: "80%" }} className="w-2 bg-accent rounded-t"></div>
+                <div style={{ height: "60%" }} className="w-2 bg-accent rounded-t"></div>
+                <div style={{ height: "90%" }} className="w-2 bg-accent rounded-t"></div>
               </div>
             </div>
-            <div className="absolute bottom-10 left-0 w-72 glass rounded-2xl p-5 backdrop-blur-xl animate-float" style={{ animationDelay: '1.5s', transform: 'translateZ(80px)' }}>
+            <div className="absolute bottom-10 left-0 w-72 glass rounded-2xl p-5 backdrop-blur-xl animate-float" style={{ animationDelay: "1.5s", transform: "translateZ(80px)" }}>
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-2.5 h-2.5 bg-red-500 rounded-full"></div>
                 <div className="w-2.5 h-2.5 bg-yellow-500 rounded-full"></div>
@@ -209,16 +216,16 @@ const Hero = () => {
 };
 
 // --- TRUST STRIP ---
-const StatCounter: React.FC<{ target: number; suffix: string; label: string }> = ({ target, suffix, label }) => {
-  const ref = useRef<HTMLDivElement>(null);
+const StatCounter = ({ target, suffix, label }) => {
+  const ref = useRef(null);
   const inView = useInView(ref);
   const [count, setCount] = useState(0);
 
   useEffect(() => {
     if (!inView) return;
-    let startTime: number;
+    let startTime;
     const duration = 2000;
-    const animate = (timestamp: number) => {
+    const animate = (timestamp) => {
       if (!startTime) startTime = timestamp;
       const progress = Math.min((timestamp - startTime) / duration, 1);
       setCount(Math.floor(progress * target));
@@ -253,13 +260,13 @@ const TrustStrip = () => (
 
 // --- ABOUT ---
 const About = () => {
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef(null);
   const inView = useInView(ref);
   return (
     <section id="about" className="py-32 relative overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-full grid-bg opacity-30"></div>
       <div className="container mx-auto px-6 grid lg:grid-cols-2 gap-20 items-center relative z-10">
-        <div ref={ref} className={`reveal ${inView ? 'in-view' : ''}`}>
+        <div ref={ref} className={"reveal " + (inView ? "in-view" : "")}>
           <span className="text-xs uppercase tracking-[0.3em] text-accent">Who We Are</span>
           <h2 className="font-display text-5xl md:text-6xl mt-4 tracking-tight">WE TURN IDEAS<br/>INTO DIGITAL<br/><span className="gradient-text">EXPERIENCES.</span></h2>
         </div>
@@ -289,12 +296,12 @@ const Services = () => {
     { num: "06", icon: IdCard, title: "Branding Solutions", desc: "Complete branding and visual identity solutions designed to build trust.", features: ["Brand Strategy", "Visual Identity", "Style Guide"] },
   ];
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleMouseMove = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    e.currentTarget.style.setProperty('--mouse-x', `${x}px`);
-    e.currentTarget.style.setProperty('--mouse-y', `${y}px`);
+    e.currentTarget.style.setProperty('--mouse-x', x + "px");
+    e.currentTarget.style.setProperty('--mouse-y', y + "px");
   };
 
   return (
@@ -307,7 +314,7 @@ const Services = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {services.map((s, i) => (
             <div key={i} className="group relative glass p-8 rounded-2xl hoverable transition-colors duration-300" onMouseMove={handleMouseMove}>
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-2xl" style={{ background: 'radial-gradient(200px circle at var(--mouse-x) var(--mouse-y), rgba(0, 209, 255, 0.1), transparent 80%)' }}></div>
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-2xl" style={{ background: "radial-gradient(200px circle at var(--mouse-x) var(--mouse-y), rgba(0, 209, 255, 0.1), transparent 80%)" }}></div>
               <div className="relative z-10 flex flex-col h-full">
                 <div className="flex justify-between items-start mb-8">
                   <div className="w-14 h-14 rounded-xl glass flex items-center justify-center group-hover:bg-accent group-hover:text-black transition-colors"><s.icon size={24} /></div>
@@ -347,10 +354,10 @@ const Solutions = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {solutions.map((s, i) => (
             <div key={i} className="group relative h-80 glass rounded-2xl overflow-hidden flex flex-col justify-end p-8 hoverable cursor-pointer">
-              <div className={`absolute inset-0 bg-gradient-to-br ${s.color} opacity-0 group-hover:opacity-20 transition-opacity duration-500`}></div>
+              <div className={"absolute inset-0 bg-gradient-to-br " + s.color + " opacity-0 group-hover:opacity-20 transition-opacity duration-500"}></div>
               <div className="absolute top-6 right-6 text-6xl font-display font-bold text-white/5 group-hover:text-white/10 transition-colors">{s.num}</div>
               <div className="relative z-10 transform group-hover:-translate-y-4 transition-transform duration-500">
-                <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${s.color} flex items-center justify-center mb-4`}><s.icon size={24} className="text-white" /></div>
+                <div className={"w-14 h-14 rounded-xl bg-gradient-to-br " + s.color + " flex items-center justify-center mb-4"}><s.icon size={24} className="text-white" /></div>
                 <h3 className="text-2xl font-display">{s.title}</h3>
                 <div className="flex items-center text-accent mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Explore <ArrowRight size={16} className="ml-2" /></div>
               </div>
@@ -362,7 +369,7 @@ const Solutions = () => {
   );
 };
 
-// --- PORTFOLIO (With Cursor Tracking Arrow) ---
+// --- PORTFOLIO ---
 const Portfolio = () => {
   const filters = ["All", "Design", "Photo", "Websites", "Software", "Branding"];
   const [activeFilter, setActiveFilter] = useState("All");
@@ -375,20 +382,20 @@ const Portfolio = () => {
   ];
   const filtered = activeFilter === "All" ? projects : projects.filter(p => p.cat === activeFilter);
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleMouseMove = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    const arrowEl = e.currentTarget.querySelector('.portfolio-arrow') as HTMLElement;
+    const arrowEl = e.currentTarget.querySelector('.portfolio-arrow');
     if (arrowEl) {
-      arrowEl.style.left = `${x}px`;
-      arrowEl.style.top = `${y}px`;
+      arrowEl.style.left = x + "px";
+      arrowEl.style.top = y + "px";
       arrowEl.style.opacity = '1';
     }
   };
 
-  const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
-    const arrowEl = e.currentTarget.querySelector('.portfolio-arrow') as HTMLElement;
+  const handleMouseLeave = (e) => {
+    const arrowEl = e.currentTarget.querySelector('.portfolio-arrow');
     if (arrowEl) arrowEl.style.opacity = '0';
   };
 
@@ -402,7 +409,7 @@ const Portfolio = () => {
           </div>
           <div className="flex flex-wrap gap-2">
             {filters.map(f => (
-              <button key={f} onClick={() => setActiveFilter(f)} className={`px-4 py-2 text-sm rounded-full border transition-colors ${activeFilter === f ? 'bg-accent text-black border-accent' : 'border-white/20 hover:border-accent hover:text-accent'}`}>{f}</button>
+              <button key={f} onClick={() => setActiveFilter(f)} className={"px-4 py-2 text-sm rounded-full border transition-colors " + (activeFilter === f ? "bg-accent text-black border-accent" : "border-white/20 hover:border-accent hover:text-accent")}>{f}</button>
             ))}
           </div>
         </div>
@@ -412,8 +419,7 @@ const Portfolio = () => {
               <div className="absolute inset-0 bg-gradient-to-br from-secondary to-primary"></div>
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent opacity-80 group-hover:opacity-100 transition-opacity"></div>
               
-              {/* Cursor Tracking Arrow */}
-              <div className="portfolio-arrow absolute w-16 h-16 rounded-full bg-accent text-black flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300" style={{ transform: 'translate(-50%, -50%)' }}>
+              <div className="portfolio-arrow absolute w-16 h-16 rounded-full bg-accent text-black flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300" style={{ transform: "translate(-50%, -50%)" }}>
                 <ArrowUpRight size={24} />
               </div>
 
@@ -430,7 +436,7 @@ const Portfolio = () => {
   );
 };
 
-// --- CASE STUDIES (Sticky Scroll) ---
+// --- CASE STUDIES ---
 const CaseStudies = () => {
   return (
     <section className="py-32 relative">
@@ -440,13 +446,11 @@ const CaseStudies = () => {
           <h2 className="font-display text-5xl md:text-6xl mt-4 tracking-tight">FROM IDEA TO IMPACT.</h2>
         </div>
         <div className="grid lg:grid-cols-2 gap-12 items-start">
-          {/* Sticky Image */}
           <div className="lg:sticky lg:top-32 h-[400px] glass rounded-2xl overflow-hidden relative">
             <div className="absolute inset-0 bg-gradient-to-br from-accent/20 to-blue-600/20 flex items-center justify-center">
               <Globe size={80} className="text-accent/30" />
             </div>
           </div>
-          {/* Scrolling Content */}
           <div className="space-y-12">
             {[
               { stage: "Challenge", text: "A growing healthcare provider needed a unified system to handle patient data and appointments." },
@@ -467,9 +471,9 @@ const CaseStudies = () => {
   );
 };
 
-// --- PROCESS (Scroll Fill Line) ---
+// --- PROCESS ---
 const Process = () => {
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef(null);
   const [fill, setFill] = useState(0);
 
   useEffect(() => {
@@ -505,10 +509,8 @@ const Process = () => {
           <h2 className="font-display text-5xl md:text-6xl mt-4 tracking-tight">OUR PROCESS</h2>
         </div>
         <div ref={ref} className="relative max-w-3xl mx-auto">
-          {/* Background Line */}
           <div className="absolute left-6 top-0 bottom-0 w-px bg-white/10"></div>
-          {/* Fill Line */}
-          <div className="absolute left-6 top-0 w-px bg-accent transition-all duration-100 ease-out" style={{ height: `${fill}%` }}></div>
+          <div className="absolute left-6 top-0 w-px bg-accent transition-all duration-100 ease-out" style={{ height: fill + "%" }}></div>
           
           <div className="space-y-12">
             {steps.map((s, i) => (
@@ -527,7 +529,7 @@ const Process = () => {
   );
 };
 
-// --- TESTIMONIALS (Marquee) ---
+// --- TESTIMONIALS ---
 const Testimonials = () => {
   const testimonials = [
     { name: "Sarah Johnson", role: "CEO, MedCare", text: "Brixo-TechFx transformed our clinic operations. Their hospital management system is unparalleled." },
@@ -535,7 +537,7 @@ const Testimonials = () => {
     { name: "Emma Williams", role: "Marketing Dir., StyleCo", text: "Exceptional branding and photo retouching. They understand modern aesthetics perfectly." },
     { name: "Michael Brown", role: "CTO, FinTechX", text: "Secure, fast, and beautiful. Our web platform has never performed better." },
   ];
-  const items = [...testimonials, ...testimonials]; // Duplicate for infinite loop
+  const items = [...testimonials, ...testimonials];
 
   return (
     <section className="py-32 bg-secondary/20 overflow-hidden">
